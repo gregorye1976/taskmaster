@@ -1,0 +1,59 @@
+name: Deploy to GitHub Pages with Config
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create config.json from secrets
+        run: |
+          cat > config.json << EOF
+          {
+            "supabaseUrl": "${{ secrets.SUPABASE_URL }}",
+            "supabaseAnonKey": "${{ secrets.SUPABASE_ANON_KEY }}"
+          }
+          EOF
+          echo "✅ Config file created successfully"
+
+      - name: Verify files exist
+        run: |
+          echo "Checking required files..."
+          test -f index.html && echo "✅ index.html found" || echo "❌ index.html missing"
+          test -f admin-panel.html && echo "✅ admin-panel.html found" || echo "❌ admin-panel.html missing"
+          test -f config.js && echo "✅ config.js found" || echo "❌ config.js missing"
+          test -f config.json && echo "✅ config.json found" || echo "❌ config.json missing"
+          test -f manifest.json && echo "✅ manifest.json found" || echo "❌ manifest.json missing"
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Output deployment URL
+        run: |
+          echo "🚀 Deployment complete!"
+          echo "📱 Main App: ${{ steps.deployment.outputs.page_url }}"
+          echo "🔐 Admin Panel: ${{ steps.deployment.outputs.page_url }}admin-panel.html"
