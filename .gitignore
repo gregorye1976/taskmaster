@@ -18,3 +18,11 @@ npm-debug.log*
 # Environment files
 .env
 .env.local
+
+# Netlify
+.netlify/
+functions-dist
+
+#old insecure
+config.json
+config-old.js

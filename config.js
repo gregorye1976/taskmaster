@@ -1,5 +1,5 @@
-// config.js - Supabase Configuration Loader
-// This file loads Supabase credentials from config.json (which is gitignored)
+// config.js - Secure Configuration Loader for Netlify
+// Fetches credentials from serverless function (NOT from static file)
 
 let supabaseConfig = null;
 
@@ -9,26 +9,37 @@ async function loadSupabaseConfig() {
     }
 
     try {
-        // Try to load from config.json first (local development)
-        const response = await fetch('./config.json');
+        // Fetch from Netlify serverless function
+        // This function runs on Netlify's servers and never exposes credentials in static files
+        const response = await fetch('/api/get-config');
+        
         if (response.ok) {
             supabaseConfig = await response.json();
+            
+            // Validate response
+            if (!supabaseConfig.supabaseUrl || !supabaseConfig.supabaseAnonKey) {
+                console.error('Invalid configuration received from server');
+                return null;
+            }
+            
+            console.log('✅ Configuration loaded securely from server');
             return supabaseConfig;
+        } else {
+            const error = await response.json();
+            console.error('Server configuration error:', error);
+            return null;
         }
     } catch (error) {
-        console.error('Error loading config.json:', error);
+        console.error('Error loading configuration:', error);
+        
+        // If running locally without Netlify, show helpful error
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.error('⚠️ Running locally without Netlify functions.');
+            console.error('To test locally with functions, run: netlify dev');
+        }
+        
+        return null;
     }
-
-    // If config.json fails, try environment-based config
-    // This would be set up through GitHub Pages environment or similar
-    if (window.SUPABASE_CONFIG) {
-        supabaseConfig = window.SUPABASE_CONFIG;
-        return supabaseConfig;
-    }
-
-    // Last resort: prompt user for configuration
-    console.error('No configuration found. Please set up config.json');
-    return null;
 }
 
 // Export for use in other files
