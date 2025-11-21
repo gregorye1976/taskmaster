@@ -1,0 +1,52 @@
+# Netlify Configuration File
+# This configures how Netlify builds and serves your application
+
+[build]
+  # Directory to publish (root of your app)
+  publish = "."
+  
+  # Directory containing serverless functions
+  functions = "netlify/functions"
+
+# Redirect /api/* requests to serverless functions
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# Security headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Prevent clickjacking
+    X-Frame-Options = "DENY"
+    
+    # Prevent MIME type sniffing
+    X-Content-Type-Options = "nosniff"
+    
+    # Control referrer information
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    
+    # Enable browser XSS protection
+    X-XSS-Protection = "1; mode=block"
+
+# Cache static assets
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Don't cache HTML files (so updates are immediate)
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+# Environment variable configuration (set these in Netlify dashboard)
+# SUPABASE_URL = your Supabase project URL
+# SUPABASE_ANON_KEY = your Supabase anon public key
