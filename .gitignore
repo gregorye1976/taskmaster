@@ -1,5 +1,5 @@
 # Sensitive configuration files
-config.json
+#config.json
 
 # Local development
 .DS_Store
